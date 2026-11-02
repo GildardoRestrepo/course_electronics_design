@@ -63,12 +63,6 @@ En la revisión se corrigieron dos errores de conexión antes del PCB:
 
 **DRC con paridad esquemático/PCB:** 0 errores eléctricos y 0 conexiones pendientes. Quedan 4 avisos de serigrafía recortada por el borde, que corresponden a los reguladores que sobresalen a propósito.
 
-## Evidencias
-
-![Render superior](../09_power_supply/power_supply_v1/out/render_top.png)
-![Render inferior](../09_power_supply/power_supply_v1/out/render_bottom.png)
-![Render isométrico](../09_power_supply/power_supply_v1/out/render_iso.png)
-
 ---
 ## Enlaces
 [[diseno_electronico_iot|Diseño Electrónico IoT]]

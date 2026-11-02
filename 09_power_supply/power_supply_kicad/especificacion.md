@@ -119,3 +119,7 @@ Nombres de red en el esquemático: `PWR_IN`, `VIN`, `5V`, `3.3V`, `GND`. Las sal
 - Ruteo: pistas de 0.8 mm (Power) y 0.4 mm (ADJ, LED). Espinas verticales en B.Cu para 3.3 V (x = 102) y 5 V (x = 107.08) entre los selectores J7 (arriba) y J6 (abajo); salida inferior por B.Cu junto al borde.
 - Plano de GND en B.Cu con alivios térmicos; el pad GND del 7805 va con conexión sólida.
 - DRC con paridad: 0 errores eléctricos; 4 avisos de serigrafía por los reguladores que sobresalen del borde (intencional).
+
+---
+## Enlaces
+[[diseno_electronico_iot|Diseño Electrónico IoT]]
