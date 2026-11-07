@@ -39,6 +39,27 @@ Otros comandos útiles de `kicad-cli`:
 - Estadísticas de la placa: `pcb export stats -o stats.txt <pcb>`
 - No usar `pcb export gerbers` sin `--layers`: toma la configuración de ploteo guardada y puede omitir las capas internas.
 
+## Diseño por scripts (flujo probado en la práctica 10)
+Todo con el Python de KiCad (`PY="/c/Program Files/KiCad/10.0/bin/python.exe"`, siempre con `-I`) y con el archivo cerrado en KiCad. Ejemplo completo en `10_4layer_design/4layer_kicad/scripts/` (`gen_datalogger.py` + `pcb_config.json`).
+
+| Paso | Quién | Herramienta |
+|---|---|---|
+| 1. Esquemático | Claude | Script del proyecto que usa `scripts/kicad_sch_gen.py` → ERC 0/0 y netlist revisado contra la especificación |
+| 2. Importar a PCB | Usuario | KiCad: stackup (*Board Setup*) + F8, guardar y cerrar |
+| 3. Colocación, contorno, planos, zonas de exclusión | Claude | `"$PY" -I scripts/pcb_place.py <pcb> <config.json>` |
+| 4. Ruteo | Claude | `"$PY" -I scripts/pcb_route.py <pcb> <config.json>` |
+| 5. Serigrafía | Claude | `"$PY" -I scripts/pcb_silk.py <pcb> <config.json>` |
+| 6. Tablas de stackup y características | Usuario | KiCad (*Place → Add Stackup Table / Add Board Characteristics*) |
+| 7. Verificación y evidencias | Claude | `kicad_check.sh --fab`, `pcb export pdf` con `User.Drawings` |
+
+- **`kicad_sch_gen.py`**: clase `Design` (raíz, `subsheet` jerárquicas, `add_lib` para símbolos propios, `write` con `.kicad_pro` a partir de una plantilla). `Sheet.part(lib_id, ref, valor, x, y, {pin: red}, fp=...)` conecta cada pin con un tramo + etiqueta / símbolo de alimentación (`power_nets`) / `"NC"`; con `hier=True` usa etiquetas jerárquicas. Agrupa pines contiguos de la misma alimentación para que los textos no se encimen. Coordenadas en múltiplos de 1.27 mm (se ajustan solas). Revisar siempre el PDF exportado.
+- **`pcb_config.json`**: `board` (origen y tamaño), `place` (`ref: [x, y, rot, ancla]`, relativo a la esquina superior izquierda; ancla `c`/`1`/`edge`), `planes`, `keepouts`, `route`, `silk`. La documentación de cada clave está en la cabecera de cada script.
+- **Colocación**: pensarla por bloques (cristal pegado a sus pines, desacople junto a cada pin de alimentación, conectores al borde). Verificar con DRC que no haya `courtyards_overlap` y mirar `render_top.png` antes de rutear.
+- **Ruteo**: *fan-out* (cada pad SMD de una red de plano → tramo corto a su vía) y luego señales en F.Cu/B.Cu con A* sobre grilla de 0.25 mm. Respeta pistas hechas a mano (p. ej. un par USB) y zonas de exclusión. Si una red falla, la reintenta al frente del orden; si sigue fallando, **abrir espacio en la colocación** (en la práctica 10, RESET no salía del TQFP hasta bajar U2 0.7 mm). Parte los tramos donde llega una unión en T (KiCad solo reconoce uniones en extremos de pista) y elimina tramos colgantes.
+- **Serigrafía**: referencias de 0.8 mm junto a cada huella (orden por cercanía), CI grandes al centro del cuerpo, casos que no caben en `silk.manual`, textos en B.SilkS.
+- **Zona de exclusión de antena (ESP32)**: en `keepouts`, `{"name": "Antena", "rect": [x, y, w, h]}` en las 4 capas; prohíbe pistas, vías, pads y rellenos pero permite huellas (el courtyard del módulo cubre su antena). `pcb_place.py` avisa si un pad cae dentro.
+- Trampa de SWIG: `t.GetStart()`/`GetEnd()` devuelven **referencias**; copiar con `VECTOR2I(t.GetEnd())` antes de modificar la pista.
+
 ## Diseño multicapa (4 capas)
 **Stackup y reglas primero**, antes de colocar componentes:
 - Stackup recomendado: `F.Cu` señales/componentes · `In1.Cu` **GND sólido** · `In2.Cu` alimentación (3V3, VIN) · `B.Cu` señales. Toda señal rápida debe tener un plano de GND continuo justo al lado; no cortar `In1.Cu` con pistas.
@@ -57,15 +78,13 @@ Otros comandos útiles de `kicad-cli`:
 - Rellenos de GND también en `F.Cu`/`B.Cu`, cosidos al plano interno con vías cada ~5–10 mm y alrededor del borde.
 - Tras mover algo, rellenar zonas (tecla **B**) antes de mirar el DRC en KiCad.
 
-**Ruteo por script (práctica 10)**: con planos internos, primero un *fan-out* (cada pad SMD de VCC/GND → tramo corto a vía; los pads pasantes tocan el plano solos) y luego las señales en F.Cu/B.Cu con un A* sobre grilla de 0.25 mm, inflando obstáculos con separación + medio ancho + ~0.06 mm de margen. Si una red falla, pasarla al frente del orden y repetir desde la placa sin pistas; si sigue fallando, abrir espacio en la colocación (p. ej. el canal sobre un TQFP). Verificar siempre con DRC (`--refill-zones`).
-
 **Tablas de stackup y características**: no hay API en Python para generarlas; el usuario las inserta en KiCad (*Place → Add Stackup Table* / *Add Board Characteristics*) en `User.Drawings`, fuera del contorno, al final del diseño.
 
 **Revisión visual**: revisar cada `layer_<capa>.svg` (sobre todo que `In1.Cu` sea un plano casi continuo) además de los renders 3D, que solo muestran las capas externas.
 
 ## ESP32 (proyecto final)
 - Símbolos y footprints en la biblioteca estándar `RF_Module` (p. ej. `ESP32-WROOM-32E`, `ESP32-S3-WROOM-1`, `ESP32-C3-WROOM-02`, `ESP32-C6-MINI-1`); modelos 3D incluidos.
-- **Antena**: el módulo va al borde de la placa con la antena hacia fuera (o sobresaliendo). Bajo la antena **ningún cobre en ninguna capa**: zona de exclusión (*Rule Area*) con *keepout* de pistas, vías, zonas y footprints en las 4 capas, con el tamaño que indica la hoja de datos del módulo.
+- **Antena**: el módulo va al borde de la placa con la antena hacia fuera (o sobresaliendo). Bajo la antena **ningún cobre en ninguna capa**: zona de exclusión (*Rule Area*) sin pistas, vías, pads ni rellenos en las 4 capas, con el tamaño que indica la hoja de datos del módulo (por script: `keepouts` en `pcb_config.json`).
 - Desacople: 10 µF + 100 nF junto a los pines de 3V3, cada capacitor con su vía directa al plano GND. Regulador 3V3 capaz de ≥ 500 mA (picos de Wi-Fi).
 - Arranque y programación: pull-up 10 kΩ + 1 µF en `EN`, botones `EN`/`BOOT` (BOOT = GPIO0 en ESP32 clásico y S3, GPIO9 en C3/C6; confirmar los strapping pins en la hoja de datos), acceso a UART (TX/RX) o USB nativo (S3/C3) con par diferencial.
 - No usar como I/O los pines de la flash interna (GPIO6–11 en ESP32 clásico) ni dejar strapping pins con cargas que alteren el arranque.

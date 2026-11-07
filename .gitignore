@@ -45,3 +45,5 @@ _autosave-*
 
 # --- tareas ---
 tareas_diseno_electronico_iot.md
+# --- Python ---
+__pycache__/
