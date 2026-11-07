@@ -12,8 +12,17 @@ PROJ_DIR="${1:?Indica la carpeta del proyecto KiCad}"
 OUT_DIR="${2:-$PROJ_DIR/out}"
 CLI="${KICAD_CLI:-/c/Program Files/KiCad/10.0/bin/kicad-cli.exe}"
 
-SCH=$(ls "$PROJ_DIR"/*.kicad_sch 2>/dev/null | head -1)
-PCB=$(ls "$PROJ_DIR"/*.kicad_pcb 2>/dev/null | head -1)
+# El esquemático raíz y la PCB llevan el nombre del .kicad_pro (en proyectos jerárquicos hay
+# varias hojas .kicad_sch y la primera en orden alfabético no tiene por qué ser la raíz).
+PRO=$(ls "$PROJ_DIR"/*.kicad_pro 2>/dev/null | head -1)
+if [ -n "$PRO" ]; then
+  BASE="${PRO%.kicad_pro}"
+  SCH=$(ls "$BASE.kicad_sch" 2>/dev/null)
+  PCB=$(ls "$BASE.kicad_pcb" 2>/dev/null)
+else
+  SCH=$(ls "$PROJ_DIR"/*.kicad_sch 2>/dev/null | head -1)
+  PCB=$(ls "$PROJ_DIR"/*.kicad_pcb 2>/dev/null | head -1)
+fi
 [ -n "$SCH" ] || { echo "No hay .kicad_sch en $PROJ_DIR"; exit 1; }
 NAME=$(basename "$SCH" .kicad_sch)
 
