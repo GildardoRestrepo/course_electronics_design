@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "datalogger")(type "KiCad")(uri "${KIPRJMOD}/datalogger.kicad_sym")(options "")(descr "Símbolos propios del datalogger"))
+)

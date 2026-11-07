@@ -1,0 +1,9 @@
+(version 1)
+
+# J1 (I2C) y J3 (UART) son headers acodados que sobresalen del borde a propósito
+# para conectar cables por el costado; la serigrafía de sus pines queda fuera de la placa.
+(rule "Headers acodados fuera del borde"
+	(layer "F.SilkS")
+	(condition "(A.memberOfFootprint('J1') || A.memberOfFootprint('J3')) && B.Layer == 'Edge.Cuts'")
+	(constraint silk_clearance)
+	(severity ignore))
