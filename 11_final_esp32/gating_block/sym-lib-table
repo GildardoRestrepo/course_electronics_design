@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "pe_lib")(type "KiCad")(uri "${KIPRJMOD}/pe_lib.kicad_sym")(options "")(descr "ESP32 DevKitC and project symbols"))
+)
