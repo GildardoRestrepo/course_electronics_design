@@ -17,7 +17,7 @@ Este repositorio reúne todas las actividades del curso **Diseño Electrónico**
 | 08  | Introducción al flujo de trabajo en KiCad                                                       | [`08_kicad_flow_work`](08_kicad_flow_work)             | [08_kicad_flow_work.md](00_docs/08_kicad_flow_work.md)                 |
 | 09  | Fuente de poder en KiCad                                                                        | [`09_power_supply`](09_power_supply)                   | [09_power_supply.md](00_docs/09_power_supply.md)                       |
 | 10  | Diseño en 4 capas: datalogger ATmega328P                                                        | [`10_4layer_design`](10_4layer_design)                 | [10_4layer_design.md](00_docs/10_4layer_design.md)                     |
-| 11  | Diseño de placa basada en ESP32:<br>Controlador de Conmutación para Semiconductores de Potencia | `11_final_esp32`                                       | [[11_gating_block_power_electronics]]                                  |
+| 11  | Diseño de placa basada en ESP32:<br>Controlador de Conmutación para Semiconductores de Potencia | `11_final_esp32`                                       | `00_docs/11_gating_block_power_electronics.md`                                  |
 
 Cada bitácora de [`00_docs/`](00_docs) explica el objetivo, el montaje y cómo reproducir la práctica. Los valores reales de Wi-Fi, tokens y contraseñas no se versionan: cada proyecto trae un archivo de ejemplo (`secrets.h.example`) o marcadores para completar localmente.
 
